@@ -1,0 +1,70 @@
+NOTE: Anyplace you find /home/USERNAME, you need to change that to your build prefix.
+It is hardcoded in the two Makefiles.
+
+NOTE: You might need to change the CCN_DIR variable in the Makefile to reflect where
+you installed the CCNx libraries.
+
+Just some preliminary notes on how I built things on an Ubuntu 14.04 VM.
+These are not final instructions.
+
+# Set the system up.
+   > sudo apt-get install git libtool build-essential pkg-config autoconf
+   > sudo apt-get build-dep vlc
+     - takes a while
+
+# Clone VLC 3.0 source from their git repo:
+   I cloned the source into my ~/Dev directory:
+   > cd ~/Dev
+   > git clone git://git.videolan.org/vlc.git
+
+# Bootstrap vlc
+   > cd vlc; 
+   > ./bootstrap
+      - takes a while
+
+# Configure it, specifying an installation directory for the local build
+   > ./configure --prefix=/home/USERNAME/VLC3-Built
+
+# Build it.
+   > ./compile
+
+# Install the resulting build into the local installation directory:
+   > make install
+
+   - things are now placed in ~VLC3-Built, as that was specified in 
+     the --prefix arg to configure.
+
+# Build the plugin:
+   > export PKG_CONFIG_PATH=/home/USERNAME/VLC3-Built/lib/pkgconfig
+   > cd <CCNx VLC plugin directory>
+   > cd src; make
+
+# Once the plugin is built, you have a loadable plugin .so. I made a link to it from
+# the my locally-built VLC's plugins diretory:
+   > ln -s libaccess_ccn_plugin.so /home/USERNAME/VLC3-Built/lib/vlc/plugins/access/libaccess_ccn_plugin.so 
+  
+#  You could also just copy it there. 
+
+# To test it:
+#   1) Start metis somewhere
+      > metis_daemon
+#   2) Start the tutorial_Server somewhere and give it the path to the directory containing 
+       your movies as an argument
+      > tutorial_Server /path/to/movies
+
+# If you need to build the tutorial_Server, it is in the CCN-Tutorial-Demo/src directory.
+  > cd CCN-Tutorial-Demo/src
+  > make
+
+# Play the movie. Note there are TWO slashes in the 'lci://' prefix. 
+  >  ~/VLC3-Built/bin/vlc  lci://<movie file name>
+
+# Note that you don't need to give the full path to the movie, as it fetches them from the 
+# directory you gave to tutorial_Server. So, if you have ~/Movies/example.mp4, and you 
+# started tutorial_Server like so:
+   > tutorial_Server ~/Movies
+
+# Then you would just need do this to play example.mp4:
+   > ~/VLC3-Built/bin/vlc lci://example.mp4
+
+

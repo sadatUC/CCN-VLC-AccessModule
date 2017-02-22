@@ -1,0 +1,44 @@
+NOTE: Anyplace you find /home/USERNAME, you need to change that to your build prefix.
+It is hardcoded in the two Makefiles.
+
+NOTE: You might need to change the CCN_DIR variable in the Makefile to reflect where
+you installed the CCNx libraries.
+
+Just some preliminary notes on how I built things on an Ubuntu 14.04 VM.
+These are not official instructions.
+
+.) Downloaded VLC source from:
+   http://download.videolan.org/pub/videolan/vlc/2.1.5/
+   - I put it in ~/Dev/
+
+.) Unpack it. It creates a vlc-2.1.5 directory, aka <vlc src dir>.
+.) sudo apt-get install git libtool build-essential pkg-config autoconf
+.) sudo apt-get build-dep vlc
+   - takes a while
+.) cd <vlc src dir>; ./configure --prefix=/home/USERNAME/VLC-Built
+.) make install
+
+   - things are now placed in ~VLC-Built, as that was specified in 
+     the --prefix arg to configure.
+
+.) export PKG_CONFIG_PATH=/home/USERNAME/VLC-Built/lib/pkgconfig
+.) cd CCNx VLC plugin directory
+.) cd src; make
+
+# Once the plugin is built, you have a loadable plugin .so. I made a link to it from
+# the my locally-built VLC's plugins diretory:
+.) ln -s libaccess_ccn_plugin.so /home/USERNAME/VLC-Built/lib/vlc/plugins/access/libaccess_ccn_plugin.so 
+# To test it:
+.) Start metis somewhere
+
+# The piece that serves the movie files is the (unmodified) tutorial_Server from the 
+# tutorial demo. We need to start it and point it at the movie directory:
+.) cd CCN-Tutorial-Demo/src; make
+.) ./tutorial_Server <directory containing movies>
+
+# Play the movie. Note the 2 slashes in the 'lci://' prefix.
+.) ~/VLC-Built/bin/vlc  lci://<movie file name>
+
+
+
+

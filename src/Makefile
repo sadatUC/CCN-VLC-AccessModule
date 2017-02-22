@@ -1,0 +1,56 @@
+# vlc/Makefile.Linux
+#
+
+VLC_SRC = /home/USERNAME/Dev/vlc-2.1.5
+VLC_DIR = /home/USERNAME/VLC-Built
+
+CCN_DIR = /usr/local/ccn
+
+INC_FLAGS = -I$(VLC_SRC)/include \
+            -I$(VLC_SRC)/include/vlc \
+            -I$(CCN_DIR)/include
+
+LIB_FLAGS = -L$(VLC_DIR)/lib \
+            -L$(CCN_DIR)/lib \
+
+LD_RUN_PATH = -rpath $(CCN_DIR)/lib
+
+CCN_LIBS = -lccnx_api_portal \
+           -lccnx_api_notify \
+           -lrta \
+           -lccnx_api_control \
+           -lccnx_common \
+           -lparc \
+           -llongbow -llongbow-ansiterm \
+           -levent -lcrypto -lm -lpthread
+
+CFLAGS = -fPIC -g -std=gnu99 $(INC_FLAGS)
+
+all: libaccess_ccn_plugin.so
+
+SRC = ccn.c ccnxVLCUtils.c
+OBJS = ccn.o ccnxVLCUtils.o
+
+#	gcc -g -shared -std=gnu99 $< -Wl,-soname -Wl,$@ -o $@ $(LIB_FLAGS) $(LD_RUN_PATH)
+libaccess_ccn_plugin.so: $(OBJS)
+	gcc -g -shared -std=gnu99 $(OBJS) -Wl,-soname -Wl,$@ -o $@ $(LIB_FLAGS) -Wl,$(LD_RUN_PATH) $(CCN_LIBS) 
+
+libaccess_ccn_plugin.o: $(OBJS)
+	gcc $(CFLAGS) $(OBJS)  -D__PLUGIN__  -DMODULE_STRING=\"lci\" -o $@
+
+%.o : %.c
+	gcc -c $(CFLAGS) $< -D__PLUGIN__  -DMODULE_STRING=\"lci\" -o $@
+
+clean:
+	rm -f libaccess_ccn_plugin.o libaccess_ccn_plugin.so $(OBJS)
+
+install: all
+	mkdir -p $(DESTDIR)$(vlcaccessdir)
+	install -m 0755 libaccess_ccn_plugin.so $(DESTDIR)$(vlcaccessdir)
+
+install-strip: all
+	mkdir -p $(DESTDIR)$(vlcaccessdir)
+	install -s -m 0755 libaccess_ccn_plugin.so $(DESTDIR)$(vlcaccessdir)
+
+uninstall:
+	rm -f -- $(DESTDIR)$(vlcaccessdir)/libaccess_ccn_plugin.so
