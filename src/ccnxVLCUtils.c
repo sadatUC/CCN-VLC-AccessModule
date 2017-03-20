@@ -66,7 +66,7 @@
 
 #include <parc/security/parc_Security.h>
 #include <parc/security/parc_IdentityFile.h>
-#include <parc/security/parc_PublicKeySignerPkcs12Store.h>
+#include <parc/security/parc_Pkcs12KeyStore.h>
 
 
 PARCIdentity *
@@ -77,7 +77,7 @@ ccnxVLCUtils_CreateAndGetIdentity(const char *keystoreName, const char *keystore
     unsigned int keyLength = 1024;
     unsigned int validityDays = 30;
 
-    bool success = parcPublicKeySignerPkcs12Store_CreateFile(keystoreName, keystorePassword, subjectName, keyLength, validityDays);
+    bool success = parcPkcs12KeyStore_CreateFile(keystoreName, keystorePassword, subjectName, keyLength, validityDays);
     assertTrue(success,
                "parcPublicKeySignerPkcs12Store_CreateFile('%s', '%s', '%s', %d, %d) failed.",
                keystoreName, keystorePassword, subjectName, keyLength, validityDays);
@@ -107,9 +107,9 @@ ccnxVLCUtils_GetChunkNumberFromName(const CCNxName *name)
     size_t numberOfSegmentsInName = ccnxName_GetSegmentCount(name);
     CCNxNameSegment *chunkNumberSegment = ccnxName_GetSegment(name, numberOfSegmentsInName - 1);
 
-    assertTrue(ccnxNameSegment_GetType(chunkNumberSegment) == CCNxNameType_SEGMENTNUMBER,
-               "Last segment is the wrong type, expected CCNxNameType %02X got %02X",
-               CCNxNameType_SEGMENTNUMBER,
+    assertTrue(ccnxNameSegment_GetType(chunkNumberSegment) == CCNxNameLabelType_CHUNK,
+               "Last segment is the wrong type, expected CCNxNameLabelType %02X got %02X",
+               CCNxNameLabelType_CHUNK,
                ccnxNameSegment_GetType(chunkNumberSegment)) {
         ccnxName_Display(name, 0); // This executes only if the enclosing assertion fails
     }

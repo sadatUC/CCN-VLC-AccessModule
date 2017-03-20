@@ -1,10 +1,10 @@
 # vlc/Makefile.Linux
 #
 
-VLC_SRC = /home/USERNAME/Dev/vlc-2.1.5
-VLC_DIR = /home/USERNAME/VLC-Built
+VLC_SRC = /home/marc/vlc
+VLC_DIR = /home/marc/VLC-Built
 
-CCN_DIR = /usr/local/ccn
+CCN_DIR = /home/marc/CCNx_Distillery/usr
 
 INC_FLAGS = -I$(VLC_SRC)/include \
             -I$(VLC_SRC)/include/vlc \
@@ -17,7 +17,7 @@ LD_RUN_PATH = -rpath $(CCN_DIR)/lib
 
 CCN_LIBS = -lccnx_api_portal \
            -lccnx_api_notify \
-           -lrta \
+           -lccnx_transport_rta \
            -lccnx_api_control \
            -lccnx_common \
            -lparc \
@@ -36,10 +36,10 @@ libaccess_ccn_plugin.so: $(OBJS)
 	gcc -g -shared -std=gnu99 $(OBJS) -Wl,-soname -Wl,$@ -o $@ $(LIB_FLAGS) -Wl,$(LD_RUN_PATH) $(CCN_LIBS) 
 
 libaccess_ccn_plugin.o: $(OBJS)
-	gcc $(CFLAGS) $(OBJS)  -D__PLUGIN__  -DMODULE_STRING=\"lci\" -o $@
+	gcc $(CFLAGS) $(OBJS)  -D__PLUGIN__  -DMODULE_STRING=\"ccnx\" -o $@
 
 %.o : %.c
-	gcc -c $(CFLAGS) $< -D__PLUGIN__  -DMODULE_STRING=\"lci\" -o $@
+	gcc -c $(CFLAGS) $< -D__PLUGIN__  -DMODULE_STRING=\"ccnx\" -o $@
 
 clean:
 	rm -f libaccess_ccn_plugin.o libaccess_ccn_plugin.so $(OBJS)

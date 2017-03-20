@@ -27,7 +27,8 @@ These are not official instructions.
 
 # Once the plugin is built, you have a loadable plugin .so. I made a link to it from
 # the my locally-built VLC's plugins diretory:
-.) ln -s libaccess_ccn_plugin.so /home/USERNAME/VLC-Built/lib/vlc/plugins/access/libaccess_ccn_plugin.so 
+.) ln -s /home/USERNAME/CCN-VLC-AccessModule/src/libaccess_ccn_plugin.so /home/USERNAME/VLC-Built/lib/vlc/plugins/access/libaccess_ccn_plugin.so 
+
 # To test it:
 .) Start metis somewhere
 

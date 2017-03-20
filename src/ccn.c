@@ -57,6 +57,8 @@
  * Preamble
  *****************************************************************************/
 
+#define DEBUG
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -109,9 +111,9 @@ vlc_module_begin();
     set_callbacks(_CCNxOpen, _CCNxClose);
 vlc_module_end();
 
-// The prefix of the name that we'll use for our Interests. "lci:/cnx/tutorial" is
+// The prefix of the name that we'll use for our Interests. "ccnx:/cnx/tutorial" is
 // what the tutorial_Server listens for, and we're using that to serve our movies.
-static const char *_domainPrefix = "lci:/ccnx/tutorial"; // because we're using tutorial_Server
+static const char *_domainPrefix = "ccnx:/ccnx/tutorial"; // because we're using tutorial_Server
 
 /*****************************************************************************
  * Local prototypes
@@ -155,16 +157,15 @@ _createInterestForChunk(access_t *p_access, char *fileName, uint64_t chunkNum)
     access_sys_t *p_sys = p_access->p_sys;
 
     if (p_sys->interestBaseName == NULL) {
-        CCNxName *interestName = ccnxName_CreateFromURI(_domainPrefix);
+        CCNxName *interestName = ccnxName_CreateFromCString(_domainPrefix);
 
         // Append "fetch"
-        PARCElasticBuffer *commandBuffer = 
-            parcElasticBuffer_Flip(parcElasticBuffer_FromString("fetch"));
-        CCNxNameSegment *commandSegment = ccnxNameSegment_Create(CCNxNameType_NAME, commandBuffer);
+        PARCBuffer *commandBuffer = parcBuffer_AllocateCString("fetch");
+        CCNxNameSegment *commandSegment = ccnxNameSegment_CreateTypeValue(CCNxNameLabelType_NAME, commandBuffer);
 
         ccnxName_Append(interestName, commandSegment);
 
-        parcElasticBuffer_Release(&commandBuffer);
+        parcBuffer_Release(&commandBuffer);
         ccnxNameSegment_Release(&commandSegment);
 
         // Append the filename
@@ -174,24 +175,30 @@ _createInterestForChunk(access_t *p_access, char *fileName, uint64_t chunkNum)
 
         char *segment = strtok(fileName, "/");
         while(segment != NULL) {
-            PARCElasticBuffer *segmentBuf = parcElasticBuffer_Flip(parcElasticBuffer_FromString(segment));
-            CCNxNameSegment *fileNameSegment = ccnxNameSegment_Create(CCNxNameType_NAME, segmentBuf);
+            msg_Info(p_access, "_createInterestForChunk segment = %s", segment);
+            PARCBuffer *segmentBuf = parcBuffer_AllocateCString(segment);
+            CCNxNameSegment *fileNameSegment = ccnxNameSegment_CreateTypeValue(CCNxNameLabelType_NAME, segmentBuf);
             ccnxName_Append(interestName, fileNameSegment);
 
-            parcElasticBuffer_Release(&segmentBuf);
+            parcBuffer_Release(&segmentBuf);
             ccnxNameSegment_Release(&fileNameSegment);
 
             segment = strtok(NULL, "/");
         }
 
         p_sys->interestBaseName = interestName;
+
+	char *stringName = ccnxName_ToString(p_sys->interestBaseName);
+        msg_Info(p_access, "_createInterestForChunk basename = %s", stringName);
+	parcMemory_Deallocate(&stringName);
+
     }
 
     // Copy the interestBaseName since we'll be adding a chunk segment.
     CCNxName *interestNameWithChunk = ccnxName_Copy(p_sys->interestBaseName);
 
     // This is the manual version. Add the chunk number directly.
-    CCNxNameSegment *chunkNumberSegment = ccnxNameSegmentNumber_Create(CCNxNameType_SEGMENTNUMBER, chunkNum);
+    CCNxNameSegment *chunkNumberSegment = ccnxNameSegmentNumber_Create(CCNxNameLabelType_CHUNK, chunkNum);
     ccnxName_Append(interestNameWithChunk, chunkNumberSegment);
     ccnxNameSegment_Release(&chunkNumberSegment);
 
@@ -275,7 +282,9 @@ _CCNxBlock(access_t *p_access)
         msg_Info(p_access, "_CCNxBlock EOF");
     }
 
-    //msg_Info(p_access, "_CCNxBlock called. Block [%ld] [%s]", p_access->info.i_pos, p_access->psz_location);
+#ifdef DEBUG
+    msg_Info(p_access, "_CCNxBlock called. Block [%ld] [%s]", p_access->info.i_pos, p_access->psz_location);
+#endif
 
     uint64_t chunkNumberNeeded = _calculateChunkForPosition(p_access->info.i_pos, _lastSeenChunkSize);
     CCNxInterest *interest = _createInterestForChunk(p_access, p_access->psz_location, chunkNumberNeeded);
@@ -283,13 +292,13 @@ _CCNxBlock(access_t *p_access)
     // Once we know the chunk number, send an Interest for it. We'll get back the
     // corresponding ContentObject.
 
-    if (ccnxPortal_Send(p_sys->portal, interest)) {
+    if (ccnxPortal_Send(p_sys->portal, interest, CCNxStackTimeout_Never)) {
 
         msg_Info(p_access, "_CCNxBlock asked Portal for pos [%ld], chunk [%ld]", 
                             p_access->info.i_pos, chunkNumberNeeded);
 
         // Read the ContentObject response.
-        CCNxMetaMessage *response = ccnxPortal_Receive(p_sys->portal);
+        CCNxMetaMessage *response = ccnxPortal_Receive(p_sys->portal, CCNxStackTimeout_Never);
 
         if (response != NULL) {
             if (ccnxMetaMessage_IsContentObject(response)) {
@@ -442,9 +451,9 @@ _CCNxOpen(vlc_object_t *p_this)
     if ((portalFactory = _setupPortalFactory()) != NULL) {
         p_sys->portal = 
             ccnxPortalFactory_CreatePortal(portalFactory,
-                                           ccnxPortalRTA_Message,    // message mode
-                                           //ccnxPortalRTA_Chunked,    // stream mode
-                                           &ccnxPortalAttributes_Blocking);
+                                           ccnxPortalRTA_Message    // message mode
+                                           //ccnxPortalRTA_Chunked    // stream mode
+                                           );
 
         ccnxPortalFactory_Release(&portalFactory);
     } else {
