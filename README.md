@@ -60,7 +60,7 @@ NOTE: You must use two "//" forward slashes here, otherwise VLC will try to use 
 
 - If you have problems, try running metis with debugging: `CCNx_Distillery/usr/bin/metis_daemon --log processor=debug` and it will show you the URI names in the Interest messages.
 
-[1] http://download.videolan.org/pub/videolan/vlc/2.1.6/vlc-2.1.6.tar.xz
-[2] http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4
+* [1] http://download.videolan.org/pub/videolan/vlc/2.1.6/vlc-2.1.6.tar.xz
+* [2] http://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_320x180.mp4
 
 
