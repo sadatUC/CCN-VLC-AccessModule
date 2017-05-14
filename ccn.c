@@ -204,24 +204,13 @@ _createInterestForChunk(access_t *p_access, char *fileName, uint64_t chunkNum)
 
     // And, finally, create an Interest with the new name.
 
-     // Appending Frame Number for Interest
+     PARCBuffer *quaBuf = parcBuffer_AllocateCString("360p");
 
-     PARCBuffer *frameBuf = parcBuffer_AllocateCString("F50");
+     CCNxNameSegment *qualitySegment = ccnxNameSegment_CreateTypeValue(CCNxNameLabelType_NAME, quaBuf);
 
-     CCNxNameSegment *frameSegment = ccnxNameSegment_CreateTypeValue(CCNxNameLabelType_NAME, frameBuf);
-
-     ccnxName_Append(interestNameWithChunk, frameSegment);
-     parcBuffer_Release(&frameBuf);
-     ccnxNameSegment_Release(&frameSegment);
-
-     // Appending number of layers for Interest
-     PARCBuffer *layerBuf = parcBuffer_AllocateCString("L4");
-
-     CCNxNameSegment *layerSegment = ccnxNameSegment_CreateTypeValue(CCNxNameLabelType_NAME, layerBuf);
-
-     ccnxName_Append(interestNameWithChunk, layerSegment);
-     parcBuffer_Release(&layerBuf);
-     ccnxNameSegment_Release(&layerSegment);
+     ccnxName_Append(interestNameWithChunk, qualitySegment);
+     parcBuffer_Release(&quaBuf);
+     ccnxNameSegment_Release(&qualitySegment);
 
 
     CCNxInterest *result = ccnxInterest_CreateSimple(interestNameWithChunk);

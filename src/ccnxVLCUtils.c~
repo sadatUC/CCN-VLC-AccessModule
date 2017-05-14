@@ -105,7 +105,7 @@ uint64_t
 ccnxVLCUtils_GetChunkNumberFromName(const CCNxName *name)
 {
     size_t numberOfSegmentsInName = ccnxName_GetSegmentCount(name);
-    CCNxNameSegment *chunkNumberSegment = ccnxName_GetSegment(name, numberOfSegmentsInName - 3);//changedByUs
+    CCNxNameSegment *chunkNumberSegment = ccnxName_GetSegment(name, numberOfSegmentsInName - 3);
 
     assertTrue(ccnxNameSegment_GetType(chunkNumberSegment) == CCNxNameLabelType_CHUNK,
                "Last segment is the wrong type, expected CCNxNameLabelType %02X got %02X",
